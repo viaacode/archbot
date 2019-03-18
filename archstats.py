@@ -8,7 +8,7 @@ Created on Tue Sep 12 11:31:05 2017
 import os
 # import base64
 # import numpy as np
-import pandas as pd
+
 import psycopg2
 #from matplotlib import pyplot as plot
 import matplotlib
@@ -18,6 +18,7 @@ import pandas.io.sql as psql
 import json
 import datetime
 import logging
+import pandas as pd
 import configparser
 
 config = configparser.ConfigParser()

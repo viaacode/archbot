@@ -10,6 +10,14 @@ import time
 from slackclient import SlackClient
 from archstats import stats
 import configparser
+from elasticapm import Client
+import elasticapm
+elasticapm.instrument()
+elasticapm.set_transaction_name('processor')
+elasticapm.set_transaction_result('SUCCESS')
+client = Client({'SERVICE_NAME': 'archbot',
+                 'DEBUG': True,
+                 'SERVER_URL': 'http://apm-server-prd.apps.do-prd-okp-m0.do.viaa.be:80'} )
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -167,15 +175,20 @@ def parse_slack_output(slack_rtm_output):
         this parsing function returns None unless a message is
         directed at the Bot, based on its ID.
     """
-    output_list = slack_rtm_output
-
+    try:
+        output_list = slack_rtm_output
+    except Exception:
+        client.capture_exception()
+        pass
     if output_list and len(output_list) > 0:
         for output in output_list:
             if output and 'text' in output and AT_BOT in output['text']:
                 LOGGER.info('got input to parse: {}'.format(output_list))
                 # return text after the @ mention, whitespace removed
-                return output['text'].split(AT_BOT)[1].strip().lower(),\
+                o = output['text'].split(AT_BOT)[1].strip().lower(),\
                     output['channel']
+                client.capture_message('processed %s' % output['text'])
+                return o
     return None, None
 
 
@@ -184,29 +197,44 @@ if __name__ == "__main__":
                   '-3s %(lineno) -5d: %(message)s')
     logging.basicConfig(format=LOG_FORMAT, level=logging.DEBUG)
     LOGGER = logging.getLogger(__name__)
+    client = Client({'SERVICE_NAME': 'archbot',
+                 'DEBUG': True,
+                 'SERVER_URL': 'http://apm-server-prd.apps.do-prd-okp-m0.do.viaa.be:80'} )    
     try:
         formatter = logging.Formatter('%(asctime)-15s  %(levelname)-6s:'
                                       '%(message)s')
         logging.basicConfig(format=formatter, level=logging.DEBUG)
-    except PermissionError:
-        LOGGER.error("Permission denied for {}".format(logfile))
+    except Exception:
+         client.capture_exception()
     try:
         READ_WEBSOCKET_DELAY = 1  # 1 second delay reading from firehose
         if slack_client.rtm_connect():
             LOGGER.info("Bot connected and running!")
+            client.capture_message('connected the bot.' )
+
             try:
                 while True:
                     command, channel = parse_slack_output(slack_client.
                                                           rtm_read())
                     if command and channel:
+                        client.begin_transaction(transaction_type='request')
                         handle_command(command, channel)
+#                        elasticapm.set_user_context(command=command, channel=channel)
+
+                        client.capture_message('got command'  )
+                        client.end_transaction('processor', 200)
+                   # client.begin_transaction('processors',transaction_type='request')
                     time.sleep(READ_WEBSOCKET_DELAY)
+                    
             except KeyboardInterrupt:
+                client.capture_exception()
                 pass
         else:
             LOGGER.error("Connection failed. Invalid Slack token or bot ID?")
+            client.capture_exception()
 
     finally:
         LOGGER.info('killing Logger and exiting bot , Bye Bye ..')
+        client.capture_message('Closed and cleaned up' )
         clean_up_exit()
 #    print(stats(stype='workflowplot',days=1000).Plot())
