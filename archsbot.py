@@ -58,7 +58,7 @@ class plt(object):
             stype = 'cpplot'
             stats(stype=stype, days=self.days).Plot()
         try:
-            f = open('/home/tina/plot.png', 'rb')
+            f = open('/tmp/plot.png', 'rb')
             slack_client.api_call('files.upload', channels='G72H2N1CN',
                                   filename='pic.png', file=f)
         except Exception as e:
@@ -184,15 +184,10 @@ if __name__ == "__main__":
                   '-3s %(lineno) -5d: %(message)s')
     logging.basicConfig(format=LOG_FORMAT, level=logging.DEBUG)
     LOGGER = logging.getLogger(__name__)
-    logfile = '/home/tina/archbot.log'
     try:
         formatter = logging.Formatter('%(asctime)-15s  %(levelname)-6s:'
                                       '%(message)s')
-        fh = logging.FileHandler('%s' % logfile)
-        fh.setLevel(logging.INFO)
         logging.basicConfig(format=formatter, level=logging.DEBUG)
-        fh.setFormatter(formatter)
-        LOGGER.addHandler(fh)
     except PermissionError:
         LOGGER.error("Permission denied for {}".format(logfile))
     try:

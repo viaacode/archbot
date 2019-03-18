@@ -137,7 +137,7 @@ class stats(object):
                                              figsize=(8, 3))
 
                 fig = ax.get_figure()
-                fig.savefig('/home/tina/plot.png')
+                fig.savefig('/tmp/plot.png')
                 LOGGER.info('saved image')
                 plot.close(fig)
             if countPlot is True:
@@ -145,7 +145,7 @@ class stats(object):
                                               subplots=False, sharey=False,
                                               figsize=(8, 3))
                 fig = ax.get_figure()
-                fig.savefig('/home/tina/plot.png')
+                fig.savefig('/tmp/plot.png')
                 LOGGER.info('saved image')
                 plot.close(fig)
             if today is True:
@@ -261,7 +261,7 @@ class stats(object):
 
     def Plot(self):
         try:
-            os.remove('/home/tina/plot.png')
+            os.remove('/tmp/plot.png')
         except:
             pass
         if self.stype is 'plot':
@@ -301,7 +301,7 @@ class stats(object):
                                         verticalalignment='top',
                                         horizontalalignment='left')
                 fig = ax.get_figure()
-                fig.savefig('/home/tina/plot.png')
+                fig.savefig('/tmp/plot.png')
                 LOGGER.info('saved image')
                 plot.close(fig)
             else:
@@ -333,7 +333,7 @@ class stats(object):
                 ax = d.plot(legend=True, kind='area', subplots=False,
                             stacked=True, figsize=(16, 8))
                 fig = ax.get_figure()
-                fig.savefig('/home/tina/plot.png')
+                fig.savefig('/tmp/plot.png')
                 LOGGER.info('saved image')
                 plot.close(fig)
             else:
@@ -355,7 +355,7 @@ class stats(object):
                                               colormap='jet')
 
                 fig = ax.get_figure()
-                fig.savefig('/home/tina/plot.png')
+                fig.savefig('/tmp/plot.png')
                 LOGGER.info('saved image')
                 plot.close(fig)
             else:
