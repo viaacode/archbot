@@ -67,7 +67,7 @@ class stats(object):
         FROM sips
         left JOIN premis_events on sips.fragment_id = premis_events.fragment_id
         WHERE archive_status = 'on_tape'
-        AND premis_events.type = 'ARCHIVED_ON_TAPE_VAULT'
+        AND premis_events.type = 'FLOW.ARCHIVED_ON_TAPE_VAULT'
         AND premis_events.date >=  current_date - interval '{}' day
         AND premis_events.outcome = 'OK'
         AND organisation not in ('testbeeld','viaa','viaa-archief','failures')
@@ -81,7 +81,7 @@ class stats(object):
         FROM sips
         left JOIN premis_events on sips.fragment_id = premis_events.fragment_id
         WHERE archive_status = 'on_tape'
-        AND premis_events.type = 'ARCHIVED_ON_TAPE_VAULT'
+        AND premis_events.type = 'FLOW.ARCHIVED_ON_TAPE_VAULT'
         AND premis_events.date >=  current_date - interval '{}' day
         AND premis_events.outcome = 'OK'
         AND organisation not in ('testbeeld','viaa','viaa-archief','failures')
@@ -96,7 +96,7 @@ class stats(object):
         FROM sips
         left JOIN premis_events on sips.fragment_id = premis_events.fragment_id
         WHERE archive_status = 'on_tape'
-        AND premis_events.type = 'ARCHIVED_ON_TAPE_VAULT'
+        AND premis_events.type = 'FLOW.ARCHIVED_ON_TAPE_VAULT'
         AND premis_events.date >=  now() - interval '24' hour
         AND premis_events.outcome = 'OK'
         AND organisation not in ('testbeeld','viaa','viaa-archief','failures')

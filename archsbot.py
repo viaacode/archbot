@@ -15,9 +15,10 @@ import elasticapm
 elasticapm.instrument()
 elasticapm.set_transaction_name('processor')
 elasticapm.set_transaction_result('SUCCESS')
-client = Client({'SERVICE_NAME': 'archbot',
-                 'DEBUG': True,
-                 'SERVER_URL': 'http://apm-server-prd.apps.do-prd-okp-m0.do.viaa.be:80'} )
+from elasticapm.handlers.logging import LoggingHandler
+# client = Client({'SERVICE_NAME': 'archbot',
+#                  'DEBUG': False,
+#                  'SERVER_URL': 'http://apm-server-prd.apps.do-prd-okp-m0.do.viaa.be:80'} )
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -193,17 +194,26 @@ def parse_slack_output(slack_rtm_output):
 
 
 if __name__ == "__main__":
+    LOGGER = logging.getLogger(__name__)
+
     LOG_FORMAT = ('%(asctime)-15s %(levelname) -5s %(name) -5s %(funcName) '
                   '-3s %(lineno) -5d: %(message)s')
-    logging.basicConfig(format=LOG_FORMAT, level=logging.DEBUG)
-    LOGGER = logging.getLogger(__name__)
+    logging.basicConfig(format=LOG_FORMAT, level=logging.INFO)
     client = Client({'SERVICE_NAME': 'archbot',
-                 'DEBUG': True,
-                 'SERVER_URL': 'http://apm-server-prd.apps.do-prd-okp-m0.do.viaa.be:80'} )    
+                 'DEBUG': False,
+                 'SERVER_URL': 'http://apm-server-prd.apps.do-prd-okp-m0.do.viaa.be:80'} )        
+    handler = LoggingHandler(client=client)
+    handler.setLevel(logging.WARN)
+    logging.getLogger('elasticapm').setLevel('INFO')
+    LOGGER.addHandler(handler)
+    
+    
+    
+
     try:
         formatter = logging.Formatter('%(asctime)-15s  %(levelname)-6s:'
                                       '%(message)s')
-        logging.basicConfig(format=formatter, level=logging.DEBUG)
+        logging.basicConfig(format=formatter, level=logging.INFO)
     except Exception:
          client.capture_exception()
     try:
