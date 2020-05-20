@@ -13,7 +13,6 @@ COPY --from=compile-image /opt/venv /opt/venv
 RUN apt update && apt install -y libpq-dev libpng-dev libfreetype6-dev && rm -rf /var/lib/apt/lists/*
 EXPOSE 8080 8080
 ENV LANG=C.UTF-8
-VOLUME /etc/viaa-workers
 WORKDIR /app
 COPY . .
 RUN groupadd -r app && useradd -b / -r -g app app
@@ -22,4 +21,5 @@ RUN chown -R app:0 /app && chmod -R g+rwx /app
 USER app
 # Make sure we use the virtualenv:
 ENV PATH="/opt/venv/bin:$PATH"
+VOLUME /etc/viaa-workers
 CMD http_proxy='' https_proxy='' python3 archsbot.py 
