@@ -1,4 +1,4 @@
-FROM python:3.7-slim AS compile-image
+FROM python:3.8-slim AS compile-image
 RUN apt-get update &&  apt-get install -y --no-install-recommends libpq-dev build-essential gcc libpng-dev libfreetype6-dev  pkg-config autoconf libtool automake
 RUN python -m venv /opt/venv
 
@@ -8,7 +8,7 @@ WORKDIR /app
 COPY requirements.txt /app/requirements.txt
 RUN pip install -r requirements.txt
 
-FROM python:3.7-slim AS build-image
+FROM python:3.8-slim AS build-image
 COPY --from=compile-image /opt/venv /opt/venv
 RUN apt update && apt install -y libpq-dev libpng-dev libfreetype6-dev && rm -rf /var/lib/apt/lists/*
 EXPOSE 8080 8080

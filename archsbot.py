@@ -53,17 +53,17 @@ class plt(object):
 
     def Post(self):
 
-        if self.ptype is 'status_plot':
+        if self.ptype == 'status_plot':
             stats(days=0).Status(today=False, Plot=True)
-        if self.ptype is 'status_countPlot':
+        if self.ptype == 'status_countPlot':
             stats(days=0).Status(today=False, countPlot=True)
-        if self.ptype is 'plot':
+        if self.ptype == 'plot':
             stype = 'plot'
             stats(stype=stype, days=self.days).Plot()
-        if self.ptype is 'workflow':
+        if self.ptype == 'workflow':
             stype = 'workflowplot'
             stats(stype=stype, days=self.days).Plot()
-        if self.ptype is 'cpplot':
+        if self.ptype == 'cpplot':
             stype = 'cpplot'
             stats(stype=stype, days=self.days).Plot()
         try:
@@ -145,7 +145,7 @@ def handle_command(command, channel):
             plt(ptype='workflow', days=days).Post()
         if cpplot:
             plt(ptype='cpplot', days=days).Post()
-        if video or audio or other or total or stype is 'all':
+        if video or audio or other or total or stype == 'all':
             response = stats(stype=stype, days=days, video=video, audio=audio,
                              other=other, total=total).Fetch()
             return slack_client.api_call("chat.postMessage", channel=channel,
@@ -201,14 +201,14 @@ if __name__ == "__main__":
     logging.basicConfig(format=LOG_FORMAT, level=logging.INFO)
     client = Client({'SERVICE_NAME': 'archbot',
                  'DEBUG': False,
-                 'SERVER_URL': 'http://apm-server-prd.apps.do-prd-okp-m0.do.viaa.be:80'} )        
+                 'SERVER_URL': 'http://apm-server-prd.apps.do-prd-okp-m0.do.viaa.be:80'} )
     handler = LoggingHandler(client=client)
     handler.setLevel(logging.WARN)
     logging.getLogger('elasticapm').setLevel('INFO')
     LOGGER.addHandler(handler)
-    
-    
-    
+
+
+
 
     try:
         formatter = logging.Formatter('%(asctime)-15s  %(levelname)-6s:'
@@ -235,7 +235,7 @@ if __name__ == "__main__":
                         client.end_transaction('processor', 200)
                    # client.begin_transaction('processors',transaction_type='request')
                     time.sleep(READ_WEBSOCKET_DELAY)
-                    
+
             except KeyboardInterrupt:
                 client.capture_exception()
                 pass

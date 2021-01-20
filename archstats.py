@@ -67,7 +67,7 @@ class stats(object):
         FROM sips
         left JOIN premis_events on sips.fragment_id = premis_events.fragment_id
         WHERE archive_status = 'on_tape'
-        AND premis_events.type = 'FLOW.ARCHIVED_ON_TAPE_VAULT'
+        AND premis_events.type = 'ARCHIVED_ON_TAPE_VAULT'
         AND premis_events.date >=  current_date - interval '{}' day
         AND premis_events.outcome = 'OK'
         AND organisation not in ('testbeeld','viaa','viaa-archief','failures')
@@ -81,7 +81,7 @@ class stats(object):
         FROM sips
         left JOIN premis_events on sips.fragment_id = premis_events.fragment_id
         WHERE archive_status = 'on_tape'
-        AND premis_events.type = 'FLOW.ARCHIVED_ON_TAPE_VAULT'
+        AND premis_events.type = 'ARCHIVED_ON_TAPE_VAULT'
         AND premis_events.date >=  current_date - interval '{}' day
         AND premis_events.outcome = 'OK'
         AND organisation not in ('testbeeld','viaa','viaa-archief','failures')
@@ -96,7 +96,7 @@ class stats(object):
         FROM sips
         left JOIN premis_events on sips.fragment_id = premis_events.fragment_id
         WHERE archive_status = 'on_tape'
-        AND premis_events.type = 'FLOW.ARCHIVED_ON_TAPE_VAULT'
+        AND premis_events.type = 'ARCHIVED_ON_TAPE_VAULT'
         AND premis_events.date >=  now() - interval '24' hour
         AND premis_events.outcome = 'OK'
         AND organisation not in ('testbeeld','viaa','viaa-archief','failures')
@@ -180,7 +180,7 @@ class stats(object):
             LOGGER.error(str(e))
             return {'error':  str(e)}
         if data.empty is not True:
-            if self.stype is 'workflow':
+            if self.stype == 'workflow':
                 if self.video:
                     LOGGER.info('Video requested')
                     v = data.type == 'video'
@@ -245,7 +245,7 @@ class stats(object):
                     parsed = json.loads(cleansubset.to_json(date_format='iso',
                                                             orient='table'))
                     return json.dumps(parsed, indent=4, sort_keys=True)
-            if self.stype is 'all':
+            if self.stype == 'all':
                 data.sort_values(["date_trunc", "workflow"],
                                  ascending=[False, True])
                 data.date_trunc = data.date_trunc.dt.date
@@ -265,7 +265,7 @@ class stats(object):
             os.remove('/tmp/plot.png')
         except:
             pass
-        if self.stype is 'plot':
+        if self.stype == 'plot':
             try:
                 conn = connectDB()
                 cursor = conn.cursor()
@@ -308,7 +308,7 @@ class stats(object):
             else:
                 LOGGER.info('no results, empty DataFrame')
                 return {'error': 'emptydata, no results'}
-        if self.stype is 'workflowplot':
+        if self.stype == 'workflowplot':
             try:
                 data = None
                 conn = connectDB()
@@ -340,7 +340,7 @@ class stats(object):
             else:
                 LOGGER.error('no results, empty DataFrame')
                 return {'error': 'emptydata, no results'}
-        if self.stype is 'cpplot':
+        if self.stype == 'cpplot':
 
             conn = connectDB()
             df = None
@@ -388,6 +388,6 @@ def connectDB():
         return False
 #
 print(stats(days=0,).Status(today=False,countPlot=False, Plot=True))
-# print(stats(stype='workflowplot',days=6).Plot())
+#print(stats(stype='workflowplot',days=6).Plot())
 # ###
 # print(stats(stype='workflow', total=True, days=0).Fetch())
