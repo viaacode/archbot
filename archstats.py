@@ -387,7 +387,7 @@ def connectDB():
         LOGGER.error('error: ' + str(e))
         return False
 #
-print(stats(days=0,).Status(today=False,countPlot=False, Plot=True))
+#print(stats(days=0,).Status(today=False,countPlot=False, Plot=True))
 #print(stats(stype='workflowplot',days=6).Plot())
 # ###
-# print(stats(stype='workflow', total=True, days=0).Fetch())
+#print(stats(stype='workflow', total=True, days=0).Fetch())
