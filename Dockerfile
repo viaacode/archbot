@@ -6,7 +6,8 @@ RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 WORKDIR /app
 COPY requirements.txt /app/requirements.txt
-RUN pip install -r requirements.txt
+RUN RUN  pip install git+https://github.com/viaacode/chassis.py.git@development &&\
+    pip install -r requirements.txt
 
 FROM python:3.8-slim AS build-image
 COPY --from=compile-image /opt/venv /opt/venv
@@ -22,4 +23,4 @@ USER app
 # Make sure we use the virtualenv:
 ENV PATH="/opt/venv/bin:$PATH"
 VOLUME /etc/viaa-workers
-CMD http_proxy='' https_proxy='' python3 archsbot.py 
+CMD http_proxy='' https_proxy='' python3 archsbot.py

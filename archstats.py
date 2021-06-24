@@ -19,14 +19,15 @@ import json
 import datetime
 import logging
 import pandas as pd
-import configparser
-
-config = configparser.ConfigParser()
-config.read('config.ini')
-bot_id = config['slack_api']['bot_id']
-client_token =   config['slack_api']['client_token']
+from viaa.configuration import ConfigParser
 
 
+config = ConfigParser()
+bot_id = config.app_cfg['slack_api']['bot_id']
+client_token = config.app_cfg['slack_api']['client_token']
+db_name = config.app_cfg['mh_db']['db_name']
+db_user = config.app_cfg['mh_db']['user']
+db_passwd = config.app_cfg['mh_db']['passwd']
 LOGGER = logging.getLogger(__name__)
 LOG_FORMAT = ('%(asctime)-15s %(levelname) -5s %(name) -5s %(funcName) '
               '-5s %(lineno) -5d: %(message)s')
@@ -372,10 +373,6 @@ class stats(object):
 
 def connectDB():
     try:
-
-        db_name = config['mh_db']['db_name']
-        db_user = config['mh_db']['user']
-        db_passwd = config['mh_db']['passwd']
         conn = psycopg2.connect(dbname=db_name,
                                 port=1433,
                                 user=db_user,
@@ -390,4 +387,4 @@ def connectDB():
 #print(stats(days=0,).Status(today=False,countPlot=False, Plot=True))
 #print(stats(stype='workflowplot',days=6).Plot())
 # ###
-#print(stats(stype='workflow', total=True, days=0).Fetch())
+#print(stats(stype='workflow', total=True, days=1).Fetch())

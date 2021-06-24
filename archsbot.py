@@ -20,10 +20,16 @@ from elasticapm.handlers.logging import LoggingHandler
 #                  'DEBUG': False,
 #                  'SERVER_URL': 'http://apm-server-prd.apps.do-prd-okp-m0.do.viaa.be:80'} )
 
-config = configparser.ConfigParser()
-config.read('config.ini')
-bot_id = config['slack_api']['bot_id']
-client_token =   config['slack_api']['client_token']
+from viaa.configuration import ConfigParser
+
+#config = configparser.ConfigParser()
+#config.read('config.ini')
+
+#bot_id = config['slack_api']['bot_id']
+#client_token =   config['slack_api']['client_token']
+config = ConfigParser()
+bot_id = config.app_cfg['slack_api']['bot_id']
+client_token = config.app_cfg['slack_api']['client_token']
 
 def clean_up_exit():
     handlers = LOGGER.handlers[:]
