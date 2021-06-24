@@ -15,8 +15,7 @@ pipeline {
           labels:
             component: infra-builder
             lang: python
-            app: hello
-            env: dev
+            app: archbot
         spec:
           containers:
           - name: default
@@ -25,17 +24,7 @@ pipeline {
             - cat
             tty: true
             imagePullPolicy: Always
-          - name: python37
-            image: python:3.7
-            command:
-            - cat
-            tty: true
-          - name: python38
-            image: python:3.8-slim
-            command:
-            - cat
-            tty: true
-
+          
         """.stripIndent()
     }
   }  
@@ -72,7 +61,7 @@ pipeline {
                                 name: 'env'
                             ),
                             booleanParam(
-                                defaultValue: true, 
+                                defaultValue: false, 
                                 description: 'Run test?', 
                                 name: 'TEST'
                             ),booleanParam(
@@ -93,7 +82,7 @@ pipeline {
                                  name: 'COMMENT'
                             ),
                             string(
-                                defaultValue: 'meemoo-infra', 
+                                defaultValue: 'slack-bots', 
                                 name: 'OC_PROJECT', 
                                 trim: true
                             ),
@@ -103,22 +92,22 @@ pipeline {
                                 trim: true
                             ),
                             string(
-                                defaultValue: 'python:3.7', 
+                                defaultValue: 'python-slim:3.8', 
                                 name: 'BASE_IMG', 
                                 trim: true
                             ),
                             string(
-                                defaultValue: 'demo', 
+                                defaultValue: 'archbot', 
                                 name: 'IS', 
                                 trim: true
                             ),
                             string(
-                                defaultValue: "main", 
+                                defaultValue: "master", 
                                 name: 'BRANCH', 
                                 trim: true
                             ),
                             string(
-                                defaultValue: 'https://github.com/viaacode/hello-viaa-python.git', 
+                                defaultValue: 'https://github.com/viaacode/archbot.git', 
                                 name: 'APP_REPO', 
                                 trim: true
                             ),
@@ -128,12 +117,12 @@ pipeline {
                                 trim: true
                             ),
                             string(
-                                defaultValue: 'jenkins-demo', 
+                                defaultValue: 'archbot', 
                                 name: 'APP_NAME', 
                                 trim: true
                             ),
                             string(
-                                defaultValue: 'hello-viaa-python', 
+                                defaultValue: 'archbot', 
                                 name: 'REPO_NAME', 
                                 trim: true
                             ),
