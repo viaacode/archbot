@@ -92,7 +92,7 @@ pipeline {
                                 trim: true
                             ),
                             string(
-                                defaultValue: 'python-slim:3.8', 
+                                defaultValue: 'python:3.8-slim', 
                                 name: 'BASE_IMG', 
                                 trim: true
                             ),
