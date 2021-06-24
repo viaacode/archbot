@@ -6,7 +6,7 @@ RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 WORKDIR /app
 COPY requirements.txt /app/requirements.txt
-RUN RUN  pip install git+https://github.com/viaacode/chassis.py.git@development &&\
+RUN pip install git+https://github.com/viaacode/chassis.py.git@development &&\
     pip install -r requirements.txt
 
 FROM python:3.8-slim AS build-image
