@@ -1,5 +1,5 @@
 FROM python:3.8-slim AS compile-image
-RUN apt-get update &&  apt-get install -y --no-install-recommends libpq-dev build-essential gcc libpng-dev libfreetype6-dev  pkg-config autoconf libtool automake
+RUN apt-get update &&  apt-get install -y --no-install-recommends libpq-dev build-essential gcc libpng-dev libfreetype6-dev  pkg-config autoconf libtool automake git
 RUN python -m venv /opt/venv
 
 # Make sure we use the virtualenv:
