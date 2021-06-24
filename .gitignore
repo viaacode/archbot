@@ -1,3 +1,4 @@
 *.ini
 *.png
 __pycache__
+*.yaml
