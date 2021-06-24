@@ -6,6 +6,7 @@ app:
   slack_api:
     bot_id: !ENV ${BOT_ID}
     client_token: !ENV ${CLIENT_TOKEN}
+  mh_db:
     db_name: !ENV ${DB_NAME}
     user: !ENV ${DB_USER}
     passwd: !ENV ${DB_PASSWD}
