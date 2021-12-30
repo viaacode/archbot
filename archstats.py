@@ -5,21 +5,6 @@ Created on Tue Sep 12 11:31:05 2017
 
 @author: tina
 
-## SUM GB / type/ workflow
-# stats().Status(today=False,countPlot=False, Plot=True)
-
-
-## AANTAL Status is 24h
-# stats().Status(today=False,countPlot=True, Plot=False)
-
-# GB / type/workflow l&ast 4 days
-#stats(stype='plot',days=3).Plot()
-# ### styatus json
-# print(stats(stype='all', total=True, days=3).Fetch())
-## archbot's workflowplot
-# stats(days=363,stype='workflowplot').Plot()
-## archsbot's status'
- stats().Status()
 
 """
 import os
