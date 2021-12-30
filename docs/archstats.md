@@ -15,21 +15,6 @@ Created on Tue Sep 12 11:31:05 2017
 
 @author: tina
 
-## SUM GB / type/ workflow
-# stats().Status(today=False,countPlot=False, Plot=True)
-
-## AANTAL Status is 24h
-# stats().Status(today=False,countPlot=True, Plot=False)
-
-# GB / type/workflow l&ast 4 days
-#stats(stype='plot',days=3).Plot()
-# ### styatus json
-# print(stats(stype='all', total=True, days=3).Fetch())
-## archbot's workflowplot
-# stats(days=363,stype='workflowplot').Plot()
-## archsbot's status'
- stats().Status()
-
 #### Attributes
 
 - `config` - from pprint import pprint
@@ -37,7 +22,7 @@ Created on Tue Sep 12 11:31:05 2017
 
 ## stats
 
-[[find in source code]](../archstats.py#L82)
+[[find in source code]](../archstats.py#L67)
 
 ```python
 class stats(object):
@@ -96,7 +81,7 @@ Description:
 
 ### stats().Fetch
 
-[[find in source code]](../archstats.py#L253)
+[[find in source code]](../archstats.py#L238)
 
 ```python
 def Fetch():
@@ -106,7 +91,7 @@ Rerturns json not plot
 
 ### stats().Plot
 
-[[find in source code]](../archstats.py#L347)
+[[find in source code]](../archstats.py#L332)
 
 ```python
 def Plot():
@@ -116,7 +101,7 @@ Plots image and saves image
 
 ### stats().Status
 
-[[find in source code]](../archstats.py#L185)
+[[find in source code]](../archstats.py#L170)
 
 ```python
 def Status(Plot=False, countPlot=False):
@@ -129,7 +114,7 @@ Args:
 
 ## adjust_lightness
 
-[[find in source code]](../archstats.py#L72)
+[[find in source code]](../archstats.py#L57)
 
 ```python
 def adjust_lightness(color, amount=0.5):
@@ -137,7 +122,7 @@ def adjust_lightness(color, amount=0.5):
 
 ## connectDB
 
-[[find in source code]](../archstats.py#L494)
+[[find in source code]](../archstats.py#L479)
 
 ```python
 def connectDB():
@@ -147,7 +132,7 @@ connects to medaiahaven db
 
 ## fdrec
 
-[[find in source code]](../archstats.py#L55)
+[[find in source code]](../archstats.py#L40)
 
 ```python
 def fdrec(df):
