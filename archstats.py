@@ -4,6 +4,23 @@
 Created on Tue Sep 12 11:31:05 2017
 
 @author: tina
+
+## SUM GB / type/ workflow
+# stats().Status(today=False,countPlot=False, Plot=True)
+
+
+## AANTAL Status is 24h
+# stats().Status(today=False,countPlot=True, Plot=False)
+
+# GB / type/workflow l&ast 4 days
+#stats(stype='plot',days=3).Plot()
+# ### styatus json
+# print(stats(stype='all', total=True, days=3).Fetch())
+## archbot's workflowplot
+# stats(days=363,stype='workflowplot').Plot()
+## archsbot's status'
+ stats().Status()
+
 """
 import os
 # import base64
@@ -11,6 +28,7 @@ import os
 
 import psycopg2
 #from matplotlib import pyplot as plot
+## remove'agg' for inline plotting
 import matplotlib
 matplotlib.use('agg')
 import matplotlib.pyplot as plot
@@ -20,8 +38,8 @@ import datetime
 import logging
 import pandas as pd
 from viaa.configuration import ConfigParser
-
-
+# from pprint import pprint
+## use config.yml if you want to use env vars
 config = ConfigParser(config_file="config.yml")
 bot_id = config.app_cfg['slack_api']['bot_id']
 client_token = config.app_cfg['slack_api']['client_token']
@@ -31,7 +49,7 @@ db_passwd = config.app_cfg['mh_db']['passwd']
 LOGGER = logging.getLogger(__name__)
 LOG_FORMAT = ('%(asctime)-15s %(levelname) -5s %(name) -5s %(funcName) '
               '-5s %(lineno) -5d: %(message)s')
-logging.basicConfig(format=LOG_FORMAT, level=logging.DEBUG)
+logging.basicConfig(format=LOG_FORMAT, level=logging.INFO)
 
 
 def fdrec(df):
@@ -51,8 +69,64 @@ def fdrec(df):
                     d = d[col]
     return drec
 
+def adjust_lightness(color, amount=0.5):
+    import matplotlib.colors as mc
+    import colorsys
+    try:
+        c = mc.cnames[color]
+    except:
+        c = color
+    c = colorsys.rgb_to_hls(*mc.to_rgb(c))
+    return colorsys.hls_to_rgb(c[0], max(0, min(1, amount * c[1])), c[2])
 
 class stats(object):
+    '''Args:
+
+        - stype: one of [workflowplot,cpplot, plot]
+        - days: nr of days to process (starts with 0)
+        - audio: bool (only audio) if true
+        - video: bool (only video if true)
+        - other: bool (other type then audio/video)
+        - total (just count totals)
+
+    Description:
+        - Uses mediahaven SIPS database to fetch data
+        - workflow: all mediahaven workflows all types in plot
+        - cpplot: subplot/cp
+        - plot: type/workflow/days
+      subfunctions:
+          - Plot (to plot data)
+
+              - examples:
+                  - archbots plot:
+                      stats(days=363,stype='workflowplot').Plot()
+                  - subplots (type/cp):
+                      stats(days=3,stype='plot').Plot()
+                  - cpplot
+                      stats(days=3,stype='cpplot').Plot()
+
+
+
+          - Fetch (returns json)
+
+              - examples:
+                  - print(stats(stype='all', total=True, days=3).Fetch())
+
+                  - print(stats(video=True).Fetch())
+          - Status (json last 24h or plot of 24h if Plot is set true)
+            - Args:
+                -  Plot: bool (GB)
+                - countPlot: bool (nr aantal assets )
+
+            - examples:
+                - SUM GB / type/ workflow:
+                    stats().Status(countPlot=False, Plot=True)
+
+
+                - AANTAL Status is 24h:
+                    stats().Status(countPlot=True, Plot=False)
+
+    '''
     def __init__(self, stype='workflow', days=None, audio=False, video=False,
                  total=False, other=False):
         self.stype = stype
@@ -62,7 +136,9 @@ class stats(object):
         self.other = other
         self.total = total
         if self.days is None:
-            self.days = 7
+            self.days = 6
+        if self.days <6:
+            self.days = 6
         self.sql = """SELECT  SUM(filesize)/1000/1000/1000 as GB -- change from GiB to GB
 		,date_trunc('day', premis_events.date), workflow,sips.type
         FROM sips
@@ -82,7 +158,7 @@ class stats(object):
         FROM sips
         left JOIN premis_events on sips.fragment_id = premis_events.fragment_id
         WHERE archive_status = 'on_tape'
-        AND premis_events.type = 'ARCHIVED_ON_TAPE_VAULT'
+        AND premis_events.type = 'ARCHIVED_ON_TAPE'
         AND premis_events.date >=  current_date - interval '{}' day
         AND premis_events.outcome = 'OK'
         AND organisation not in ('testbeeld','viaa','viaa-archief','failures')
@@ -97,7 +173,7 @@ class stats(object):
         FROM sips
         left JOIN premis_events on sips.fragment_id = premis_events.fragment_id
         WHERE archive_status = 'on_tape'
-        AND premis_events.type = 'ARCHIVED_ON_TAPE_VAULT'
+        AND premis_events.type = 'ARCHIVED_ON_TAPE'
         AND premis_events.date >=  now() - interval '24' hour
         AND premis_events.outcome = 'OK'
         AND organisation not in ('testbeeld','viaa','viaa-archief','failures')
@@ -106,7 +182,13 @@ class stats(object):
         ORDER by date_trunc('day', premis_events.date) desc,
         workflow,sips.type""".format(self.days)
 
-    def Status(self, Plot=False, countPlot=False, today=False):
+    def Status(self, Plot=False, countPlot=False):
+        """ Args:
+
+            - Plot: bool (creates image of plot or not, in GB)
+            - countPlot: bool (smae as above but nr of assets )
+
+        """
         LOGGER.info('Status function requested')
         try:
             data = None
@@ -128,29 +210,31 @@ class stats(object):
             w2data = data.groupby(['workflow'])['aantal'].sum()
             tw = pd.concat([wdata, w2data], axis=1)
             t = pd.concat([g2data, gdata], axis=1)
-#            j = t.unstack(level=-1)
             t['GB'] = t['GB'].astype(float)
             p = t.drop('aantal', 1)
             p2 = t.drop('GB', 1)
+            width =24
+
             if Plot is True:
-
+                n = len(p.columns)
+                height = int(n)*6
                 ax = p.unstack(level=0).plot(kind='barh', stacked=True,
-                                             subplots=False, sharey=False,
-                                             figsize=(8, 3))
-
-                fig = ax.get_figure()
-                fig.savefig('/tmp/plot.png')
+                                             subplots=True, sharey=True,
+                                             sharex=True,
+                                             figsize=(width, height))
+                plot.savefig('/tmp/plot.png')
                 LOGGER.info('saved image')
-                plot.close(fig)
             if countPlot is True:
+                n = len(p2.columns)
+                height= int(n)*6
                 ax = p2.unstack(level=0).plot(kind='barh', stacked=True,
                                               subplots=False, sharey=False,
-                                              figsize=(8, 3))
+                                              figsize=(width, height))
                 fig = ax.get_figure()
                 fig.savefig('/tmp/plot.png')
                 LOGGER.info('saved image')
                 plot.close(fig)
-            if today is True:
+            else:
                 jtw = tw.to_json(date_format='iso', orient='index')
 
                 today_counts = json.dumps(json.loads(jtw), indent=4,
@@ -164,11 +248,10 @@ class stats(object):
                                "Details_last_24h": details}]
                 final_json.append({'date': date})
                 return json.dumps(final_json, indent=4, sort_keys=True)
-            if plot is False and today is False:
-                LOGGER.error('Wrong request')
-                return json.dumps({'error': 'Wrong request'})
+
 
     def Fetch(self):
+        """ Rerturns json not plot"""
         try:
             data = None
             conn = connectDB()
@@ -262,6 +345,7 @@ class stats(object):
         conn.close()
 
     def Plot(self):
+        """Plots image and saves image"""
         try:
             os.remove('/tmp/plot.png')
         except:
@@ -292,8 +376,10 @@ class stats(object):
                 cleansubset = subsets.dropna()
                 x_offset = -0.01
                 y_offset = -0.06
+
+                height = len(gdata)*3
                 ax = cleansubset.plot(legend=False, kind='barh', stacked=True,
-                                      subplots=False, figsize=(20, 14),
+                                      subplots=False, figsize=(32, height),
                                       width=0.89)
                 for p in ax.patches:
                             b = p.get_bbox()
@@ -318,23 +404,54 @@ class stats(object):
                 data = pd.DataFrame(cursor.fetchall(),
                                     columns=['gb', 'date_trunc', 'workflow',
                                              'type'])
+
             except TypeError as e:
                 LOGGER.error(str(e))
                 return {'error':  str(e)}
 
             if data.empty is not True:
+                height = 8
+                width = 16
+                mean = 5
+                if self.days >= 30:
+                    width = self.days
+                    height = 10
+                    mean= 8
+                if self.days >= 100:
+                    width = 72
+                    height = 18
+                    mean = 20
+                if self.days >= 250:
+                    width = 160
+                    height = 24
+                    mean = 60
 
                 data.sort_values(["date_trunc", "workflow"],
                                  ascending=[False, True])
                 data.date_trunc = data.date_trunc.dt.date
                 data['gb'] = data['gb'].astype(float)
                 gdata = data.groupby(['date_trunc', 'workflow'])['gb'].sum()
-                subsets = gdata.unstack(level=0).unstack(level=1)
-                cleansubset = subsets.dropna()
-                d = gdata.unstack(level=-1)
-                ax = d.plot(legend=True, kind='area', subplots=False,
-                            stacked=True, figsize=(16, 8))
-                fig = ax.get_figure()
+                # avergae rolling mean over X days
+                gdata_mean = gdata.rolling(mean).mean().fillna(value=0)
+                d = gdata.unstack(level=-1).fillna(value=0)
+                d2= gdata_mean.unstack(level=-1)
+                plot.style.use('ggplot')
+                fig =plot.figure(figsize=(width, height))
+                ax = fig.add_subplot()
+                ax2 = ax.twiny()
+                ax2.set_title('Ingest workflow')
+                ax2.set_ylabel("GB",loc='center')
+                d2.plot(legend=True, kind='area', ax=ax, subplots=False,
+                            stacked=True, figsize=(width, height),colormap='summer')
+
+
+                ax.legend(loc='upper left' )
+                d.plot(legend=True, kind='line',ax=ax2, subplots=False,linewidth=5.0,
+                            stacked=True, sharey=True,figsize=(width, height))
+
+
+                fig.get_figure()
+                #plot.show()
                 fig.savefig('/tmp/plot.png')
                 LOGGER.info('saved image')
                 plot.close(fig)
@@ -351,15 +468,18 @@ class stats(object):
 
                 o = df.groupby(['date_trunc', 'organisation'],
                                sort=False)['gb'].sum()
+                u =o.unstack(level=-1)
+                n= len(u.columns)
+                height= int(n)*6
+                ax = u.plot(figsize=(32, height), kind='area',
+                                              subplots=True, stacked=False,
+                                              colormap='Accent')
 
-                ax = o.unstack(level=-1).plot(figsize=(12, 8), kind='bar',
-                                              subplots=False, stacked=True,
-                                              colormap='jet')
 
-                fig = ax.get_figure()
-                fig.savefig('/tmp/plot.png')
+                #plot.show()
+                plot.savefig('/tmp/plot.png')
                 LOGGER.info('saved image')
-                plot.close(fig)
+                #plot.close(plot)
             else:
                 LOGGER.error('no results, empty DataFrame')
                 return {'error': 'emptydata, no results'}
@@ -372,11 +492,12 @@ class stats(object):
 
 
 def connectDB():
+    """connects to medaiahaven db"""
     try:
         conn = psycopg2.connect(dbname=db_name,
                                 port=1433,
                                 user=db_user,
-                                host='dg-prd-dbs-m0.dg.viaa.be',
+                                host='dO-prd-dbs-m0.do.viaa.be',
                                 password=db_passwd)
 
         return conn
@@ -384,8 +505,19 @@ def connectDB():
         LOGGER.error('error: ' + str(e))
         return False
 #
+## SUM GB / type/ workflow
+#stats().Status(countPlot=False, Plot=True)
 
-#print(stats(days=0,).Status(today=False,countPlot=False, Plot=True))
-#print(stats(stype='workflowplot',days=6).Plot())
-# ###
-#print(stats(stype='workflow', total=True, days=1).Fetch())
+
+## AANTAL Status is 24h
+# stats().Status(countPlot=True, Plot=False)
+
+# GB / type/workflow l&ast 4 days
+#stats(stype='plot',days=3).Plot()
+# ### styatus json
+#print(stats(stype='all', total=True, days=3).Fetch())
+## archbots workflowplot
+#stats(days=3,stype='cpplot').Plot()
+#
+#print(stats(video=True).Fetch())
+# stats().Status(countPlot=True, Plot=False)

@@ -16,18 +16,12 @@ elasticapm.instrument()
 elasticapm.set_transaction_name('processor')
 elasticapm.set_transaction_result('SUCCESS')
 from elasticapm.handlers.logging import LoggingHandler
-# client = Client({'SERVICE_NAME': 'archbot',
-#                  'DEBUG': False,
-#                  'SERVER_URL': 'http://apm-server-prd.apps.do-prd-okp-m0.do.viaa.be:80'} )
 
 from viaa.configuration import ConfigParser
 
-#config = configparser.ConfigParser()
-#config.read('config.ini')
-
-#bot_id = config['slack_api']['bot_id']
-#client_token =   config['slack_api']['client_token']
 config = ConfigParser()
+#config = ConfigParser(config_file="config.local.yml")
+
 bot_id = config.app_cfg['slack_api']['bot_id']
 client_token = config.app_cfg['slack_api']['client_token']
 
@@ -60,9 +54,9 @@ class plt(object):
     def Post(self):
 
         if self.ptype == 'status_plot':
-            stats(days=0).Status(today=False, Plot=True)
+            stats().Status(Plot=True)
         if self.ptype == 'status_countPlot':
-            stats(days=0).Status(today=False, countPlot=True)
+            stats().Status(countPlot=True)
         if self.ptype == 'plot':
             stype = 'plot'
             stats(stype=stype, days=self.days).Plot()
@@ -138,7 +132,7 @@ def handle_command(command, channel):
     if command.startswith(GB):
         stype = 'all'
     if 'status' in l and 'plot' not in l and 'plotcount' not in l:
-        response = stats(days=0,).Status(today=True, Plot=False)
+        response = stats().Status()
     if 'status' in l and 'plot' in l:
         plt(ptype='status_plot', days=0).Post()
     if 'status' in l and 'plotcount' in l:
@@ -253,4 +247,3 @@ if __name__ == "__main__":
         LOGGER.info('killing Logger and exiting bot , Bye Bye ..')
         client.capture_message('Closed and cleaned up' )
         clean_up_exit()
-#    print(stats(stype='workflowplot',days=1000).Plot())
