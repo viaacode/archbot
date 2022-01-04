@@ -10,3 +10,4 @@ app:
     db_name: !ENV ${DB_NAME}
     user: !ENV ${DB_USER}
     passwd: !ENV ${DB_PASSWD}
+    host: !ENV ${DB_HOST}

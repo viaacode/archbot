@@ -31,6 +31,7 @@ client_token = config.app_cfg['slack_api']['client_token']
 db_name = config.app_cfg['mh_db']['db_name']
 db_user = config.app_cfg['mh_db']['user']
 db_passwd = config.app_cfg['mh_db']['passwd']
+db_host = config.app_cfg['mh_db']['host']
 LOGGER = logging.getLogger(__name__)
 LOG_FORMAT = ('%(asctime)-15s %(levelname) -5s %(name) -5s %(funcName) '
               '-5s %(lineno) -5d: %(message)s')
@@ -365,7 +366,7 @@ class stats(object):
                 height = len(gdata)*3
                 ax = cleansubset.plot(legend=False, kind='barh', stacked=True,
                                       subplots=False, figsize=(32, height),
-                                      width=0.89)
+                                      width=0.89,sharey=False)
                 for p in ax.patches:
                             b = p.get_bbox()
                             val = "{:.0f}".format(b.x1-b.x0)
@@ -482,7 +483,7 @@ def connectDB():
         conn = psycopg2.connect(dbname=db_name,
                                 port=1433,
                                 user=db_user,
-                                host='dO-prd-dbs-m0.do.viaa.be',
+                                host=db_host,
                                 password=db_passwd)
 
         return conn
@@ -498,7 +499,7 @@ def connectDB():
 # stats().Status(countPlot=True, Plot=False)
 
 # GB / type/workflow l&ast 4 days
-#stats(stype='plot',days=3).Plot()
+#stats(stype='plot',days=6).Plot()
 # ### styatus json
 #print(stats(stype='all', total=True, days=3).Fetch())
 ## archbots workflowplot
