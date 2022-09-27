@@ -20,7 +20,7 @@ from archstats import stats
 from viaa.configuration import ConfigParser
 
 # config = ConfigParser()
-config = ConfigParser(config_file="config.local.yml")
+config = ConfigParser(config_file="config.yml")
 
 bot_id = config.app_cfg['slack_api']['bot_id']
 client_token = config.app_cfg['slack_api']['client_token']
