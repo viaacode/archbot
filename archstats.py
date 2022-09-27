@@ -7,25 +7,25 @@ Created on Tue Sep 12 11:31:05 2017
 
 
 """
+from viaa.configuration import ConfigParser
+import pandas as pd
+import logging
+import datetime
+import json
+import pandas.io.sql as psql
+import matplotlib.pyplot as plot
 import os
 # import base64
 # import numpy as np
 
 import psycopg2
 #from matplotlib import pyplot as plot
-## remove'agg' for inline plotting
+# remove'agg' for inline plotting
 import matplotlib
 matplotlib.use('agg')
-import matplotlib.pyplot as plot
-import pandas.io.sql as psql
-import json
-import datetime
-import logging
-import pandas as pd
-from viaa.configuration import ConfigParser
 # from pprint import pprint
-## use config.yml if you want to use env vars
-config = ConfigParser(config_file="config.local.yml")
+# use config.yml if you want to use env vars
+config = ConfigParser(config_file="config.yml")
 bot_id = config.app_cfg['slack_api']['bot_id']
 client_token = config.app_cfg['slack_api']['client_token']
 db_name = config.app_cfg['mh_db']['db_name']
@@ -45,15 +45,16 @@ def fdrec(df):
         d = drec
         for j, col in enumerate(line[:-1]):
             if col not in d.keys():
-                if j != ncols-2:
+                if j != ncols - 2:
                     d[col] = {}
                     d = d[col]
                 else:
                     d[col] = line[-1]
             else:
-                if j != ncols-2:
+                if j != ncols - 2:
                     d = d[col]
     return drec
+
 
 def adjust_lightness(color, amount=0.5):
     import matplotlib.colors as mc
@@ -64,6 +65,7 @@ def adjust_lightness(color, amount=0.5):
         c = color
     c = colorsys.rgb_to_hls(*mc.to_rgb(c))
     return colorsys.hls_to_rgb(c[0], max(0, min(1, amount * c[1])), c[2])
+
 
 class stats(object):
     '''Args:
@@ -113,6 +115,7 @@ class stats(object):
                     stats().Status(countPlot=True, Plot=False)
 
     '''
+
     def __init__(self, stype='workflow', days=None, audio=False, video=False,
                  total=False, other=False):
         self.stype = stype
@@ -123,7 +126,7 @@ class stats(object):
         self.total = total
         if self.days is None:
             self.days = 6
-        if self.days <6:
+        if self.days < 6:
             self.days = 6
         self.sql = """SELECT  SUM(filesize)/1000/1000/1000 as GB -- change from GiB to GB
 		,date_trunc('day', premis_events.date), workflow,sips.type
@@ -187,7 +190,7 @@ class stats(object):
 
         except TypeError as e:
             LOGGER.error(str(e))
-            return {'error':  str(e)}
+            return {'error': str(e)}
 
         if data.empty is not True:
             gdata = data.groupby(['workflow', 'type'])['GB'].sum()
@@ -199,11 +202,11 @@ class stats(object):
             t['GB'] = t['GB'].astype(float)
             p = t.drop('aantal', 1)
             p2 = t.drop('GB', 1)
-            width =24
+            width = 24
 
             if Plot is True:
                 n = len(p.columns)
-                height = int(n)*6
+                height = int(n) * 6
                 ax = p.unstack(level=0).plot(kind='barh', stacked=True,
                                              subplots=True, sharey=True,
                                              sharex=True,
@@ -212,7 +215,7 @@ class stats(object):
                 LOGGER.info('saved image')
             if countPlot is True:
                 n = len(p2.columns)
-                height= int(n)*6
+                height = int(n) * 6
                 ax = p2.unstack(level=0).plot(kind='barh', stacked=True,
                                               subplots=False, sharey=False,
                                               figsize=(width, height))
@@ -235,7 +238,6 @@ class stats(object):
                 final_json.append({'date': date})
                 return json.dumps(final_json, indent=4, sort_keys=True)
 
-
     def Fetch(self):
         """ Rerturns json not plot"""
         try:
@@ -248,7 +250,7 @@ class stats(object):
                                 'workflow', 'type'])
         except TypeError as e:
             LOGGER.error(str(e))
-            return {'error':  str(e)}
+            return {'error': str(e)}
         if data.empty is not True:
             if self.stype == 'workflow':
                 if self.video:
@@ -286,7 +288,7 @@ class stats(object):
                 if self.other:
                     LOGGER.info('ANY but video or audio requested')
                     av = ['audio', 'video']
-                    o = lambda row: row['type'] not in av
+                    def o(row): return row['type'] not in av
                     other = data[data.apply(o, axis=1)]
                     other.sort_values(["date_trunc",
                                        "workflow"], ascending=[False, True])
@@ -348,7 +350,7 @@ class stats(object):
             except TypeError as e:
                 LOGGER.error(str(e))
 
-                return {'error':  str(e)}
+                return {'error': str(e)}
 
             if data.empty is not True:
                 data.sort_values(["date_trunc", "workflow"],
@@ -363,17 +365,17 @@ class stats(object):
                 x_offset = -0.01
                 y_offset = -0.06
 
-                height = len(gdata)*3
+                height = len(gdata) * 3
                 ax = cleansubset.plot(legend=False, kind='barh', stacked=True,
                                       subplots=False, figsize=(32, height),
-                                      width=0.89,sharey=False)
+                                      width=0.89, sharey=False)
                 for p in ax.patches:
-                            b = p.get_bbox()
-                            val = "{:.0f}".format(b.x1-b.x0)
-                            ax.annotate(val, ((b.x0 + b.x1)/2 + x_offset,
-                                              (b.y1)/(1) + y_offset),
-                                        verticalalignment='top',
-                                        horizontalalignment='left')
+                    b = p.get_bbox()
+                    val = "{:.0f}".format(b.x1 - b.x0)
+                    ax.annotate(val, ((b.x0 + b.x1) / 2 + x_offset,
+                                      (b.y1) / (1) + y_offset),
+                                verticalalignment='top',
+                                horizontalalignment='left')
                 fig = ax.get_figure()
                 fig.savefig('/tmp/plot.png')
                 LOGGER.info('saved image')
@@ -393,7 +395,7 @@ class stats(object):
 
             except TypeError as e:
                 LOGGER.error(str(e))
-                return {'error':  str(e)}
+                return {'error': str(e)}
 
             if data.empty is not True:
                 height = 8
@@ -402,7 +404,7 @@ class stats(object):
                 if self.days >= 30:
                     width = self.days
                     height = 10
-                    mean= 8
+                    mean = 8
                 if self.days >= 100:
                     width = 72
                     height = 18
@@ -420,24 +422,22 @@ class stats(object):
                 # avergae rolling mean over X days
                 gdata_mean = gdata.rolling(mean).mean().fillna(value=0)
                 d = gdata.unstack(level=-1).fillna(value=0)
-                d2= gdata_mean.unstack(level=-1)
+                d2 = gdata_mean.unstack(level=-1)
                 plot.style.use('ggplot')
-                fig =plot.figure(figsize=(width, height))
+                fig = plot.figure(figsize=(width, height))
                 ax = fig.add_subplot()
                 ax2 = ax.twiny()
                 ax2.set_title('Ingest workflow')
-                ax2.set_ylabel("GB",loc='center')
+                ax2.set_ylabel("GB", loc='center')
                 d2.plot(legend=True, kind='area', ax=ax, subplots=False,
-                            stacked=True, figsize=(width, height),colormap='summer')
+                        stacked=True, figsize=(width, height), colormap='summer')
 
-
-                ax.legend(loc='upper left' )
-                d.plot(legend=True, kind='line',ax=ax2, subplots=False,linewidth=5.0,
-                            stacked=False, sharey=True,figsize=(width, height))
-
+                ax.legend(loc='upper left')
+                d.plot(legend=True, kind='line', ax=ax2, subplots=False, linewidth=5.0,
+                       stacked=False, sharey=True, figsize=(width, height))
 
                 fig.get_figure()
-                #plot.show()
+                # plot.show()
                 fig.savefig('/tmp/plot.png')
                 LOGGER.info('saved image')
                 plot.close(fig)
@@ -454,18 +454,17 @@ class stats(object):
 
                 o = df.groupby(['date_trunc', 'organisation'],
                                sort=False)['gb'].sum()
-                u =o.unstack(level=-1)
-                n= len(u.columns)
-                height= int(n)*6
+                u = o.unstack(level=-1)
+                n = len(u.columns)
+                height = int(n) * 6
                 ax = u.plot(figsize=(32, height), kind='area',
-                                              subplots=True, stacked=False,
-                                              colormap='Accent')
+                            subplots=True, stacked=False,
+                            colormap='Accent')
 
-
-                #plot.show()
+                # plot.show()
                 plot.savefig('/tmp/plot.png')
                 LOGGER.info('saved image')
-                #plot.close(plot)
+                # plot.close(plot)
             else:
                 LOGGER.error('no results, empty DataFrame')
                 return {'error': 'emptydata, no results'}
@@ -491,19 +490,19 @@ def connectDB():
         LOGGER.error('error: ' + str(e))
         return False
 #
-## SUM GB / type/ workflow
+# SUM GB / type/ workflow
 #stats().Status(countPlot=False, Plot=True)
 
-#stats(days=9,stype='workflowplot').Plot()
-## AANTAL Status is 24h
+# stats(days=9,stype='workflowplot').Plot()
+# AANTAL Status is 24h
 # stats().Status(countPlot=True, Plot=False)
 
 # GB / type/workflow l&ast 4 days
-#stats(stype='plot',days=6).Plot()
+# stats(stype='plot',days=6).Plot()
 # ### styatus json
 #print(stats(stype='all', total=True, days=3).Fetch())
-## archbots workflowplot
-#stats(days=3,stype='cpplot').Plot()
+# archbots workflowplot
+# stats(days=3,stype='cpplot').Plot()
 #
-#print(stats(video=True).Fetch())
+# print(stats(video=True).Fetch())
 # stats().Status(countPlot=True, Plot=False)
