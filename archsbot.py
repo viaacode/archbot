@@ -9,21 +9,22 @@ import logging
 import time
 from slackclient import SlackClient
 from archstats import stats
-import configparser
-from elasticapm import Client
-import elasticapm
-elasticapm.instrument()
-elasticapm.set_transaction_name('processor')
-elasticapm.set_transaction_result('SUCCESS')
-from elasticapm.handlers.logging import LoggingHandler
+# import configparser
+# from elasticapm import Client
+# import elasticapm
+# elasticapm.instrument()
+# elasticapm.set_transaction_name('processor')
+# elasticapm.set_transaction_result('SUCCESS')
+# from elasticapm.handlers.logging import LoggingHandler
 
 from viaa.configuration import ConfigParser
 
-#config = ConfigParser()
-config = ConfigParser(config_file="config.yml")
+# config = ConfigParser()
+config = ConfigParser(config_file="config.local.yml")
 
 bot_id = config.app_cfg['slack_api']['bot_id']
 client_token = config.app_cfg['slack_api']['client_token']
+
 
 def clean_up_exit():
     handlers = LOGGER.handlers[:]
@@ -31,6 +32,8 @@ def clean_up_exit():
         handler.close()
         LOGGER.removeHandler(handler)
 # constants
+
+
 BOT_ID = bot_id
 AT_BOT = "<@" + BOT_ID + ">"
 ALL = "all"
@@ -51,6 +54,7 @@ class plt(object):
         self.ptype = ptype
         self.days = days
 
+    # @elasticapm.capture_span()
     def Post(self):
 
         if self.ptype == 'status_plot':
@@ -75,6 +79,8 @@ class plt(object):
                     'error': str(e)
                     }
 
+# @elasticapm.capture_span()
+
 
 def representsInt(s):
     try:
@@ -82,6 +88,8 @@ def representsInt(s):
         return True
     except ValueError:
         return False
+
+# @elasticapm.capture_span()
 
 
 def handle_command(command, channel):
@@ -102,24 +110,24 @@ def handle_command(command, channel):
     workflowplot = False
     cpplot = False
     stype = 'workflow'
-    l = command.split()
-    for i in l:
+    lst = command.split()
+    for i in lst:
         if representsInt(i):
             found_nr = True
             days = int(i)
             LOGGER.info('found int setting days to: {}'.format(str(days)))
     if command.startswith('help'):
         response = "Usage: @archsbot " + "possible_args*['plot', 'workflowplot',"\
-                    "'cpplot', 'status', 'int(nr of days)']' OR [audio,video,other,count(sum of sizes)]  followed by nr of days"
+            "'cpplot', 'status', 'int(nr of days)']' OR [audio,video,other,count(sum of sizes)]  followed by nr of days"
 
-    if 'plot' in l:
+    if 'plot' in lst:
         LOGGER.info('Found plot in command')
         plot = True
 #    if command.startswith('plot') and not command.endswith('workflow'):
 #        plot = True
-    if 'workflowplot' in l:
+    if 'workflowplot' in lst:
         workflowplot = True
-    if 'cpplot' in l:
+    if 'cpplot' in lst:
         cpplot = True
     if command.startswith(VIDEO):
         video = True
@@ -131,11 +139,11 @@ def handle_command(command, channel):
         total = True
     if command.startswith(GB):
         stype = 'all'
-    if 'status' in l and 'plot' not in l and 'plotcount' not in l:
+    if 'status' in lst and 'plot' not in lst and 'plotcount' not in lst:
         response = stats().Status()
-    if 'status' in l and 'plot' in l:
+    if 'status' in lst and 'plot' in lst:
         plt(ptype='status_plot', days=0).Post()
-    if 'status' in l and 'plotcount' in l:
+    if 'status' in lst and 'plotcount' in lst:
         plt(ptype='status_countPlot', days=0).Post()
 
     def makeResponse():
@@ -170,17 +178,14 @@ def handle_command(command, channel):
                           text=response, as_user=True)
 
 
+# @elasticapm.capture_span()
 def parse_slack_output(slack_rtm_output):
     """
         The Slack Real Time Messaging API is an events firehose.
         this parsing function returns None unless a message is
         directed at the Bot, based on its ID.
     """
-    try:
-        output_list = slack_rtm_output
-    except Exception:
-        client.capture_exception()
-        pass
+    output_list = slack_rtm_output
     if output_list and len(output_list) > 0:
         for output in output_list:
             if output and 'text' in output and AT_BOT in output['text']:
@@ -188,7 +193,7 @@ def parse_slack_output(slack_rtm_output):
                 # return text after the @ mention, whitespace removed
                 o = output['text'].split(AT_BOT)[1].strip().lower(),\
                     output['channel']
-                client.capture_message('processed %s' % output['text'])
+                # client.capture_message('processed %s' % output['text'])
                 return o
     return None, None
 
@@ -199,51 +204,42 @@ if __name__ == "__main__":
     LOG_FORMAT = ('%(asctime)-15s %(levelname) -5s %(name) -5s %(funcName) '
                   '-3s %(lineno) -5d: %(message)s')
     logging.basicConfig(format=LOG_FORMAT, level=logging.INFO)
-    client = Client({'SERVICE_NAME': 'archbot',
-                 'DEBUG': False,
-                 'SERVER_URL': 'http://apm-server-prd.apps.do-prd-okp-m0.do.viaa.be:80'} )
-    handler = LoggingHandler(client=client)
-    handler.setLevel(logging.WARN)
-    logging.getLogger('elasticapm').setLevel('INFO')
-    LOGGER.addHandler(handler)
+    # client = Client({'SERVICE_NAME': 'archbot',
+    #              'DEBUG': True,
+    #              'SERVICE_NAME': 'archbot',
+    #              'SECRET_TOKEN': 'aC00NFNJRUJTSVdreTlNT2hsaGs6VHp6cWhQSV9Tb21YTGVxT1MyWU1kdw==',
+    #              'SERVER_URL': 'http://do-prd-elk-01:8200'} )
+    # handler = LoggingHandler(client=client)
+    # handler.setLevel(logging.WARN)
+    # logging.getLogger('elasticapm').setLevel('INFO')
+    # LOGGER.addHandler(handler)
 
+    formatter = logging.Formatter('%(asctime)-15s  %(levelname)-6s:'
+                                  '%(message)s')
+    logging.basicConfig(format=formatter, level=logging.INFO)
 
-
-
-    try:
-        formatter = logging.Formatter('%(asctime)-15s  %(levelname)-6s:'
-                                      '%(message)s')
-        logging.basicConfig(format=formatter, level=logging.INFO)
-    except Exception:
-         client.capture_exception()
     try:
         READ_WEBSOCKET_DELAY = 1  # 1 second delay reading from firehose
         if slack_client.rtm_connect():
             LOGGER.info("Bot connected and running!")
-            client.capture_message('connected the bot.' )
-
-            try:
-                while True:
-                    command, channel = parse_slack_output(slack_client.
-                                                          rtm_read())
-                    if command and channel:
-                        client.begin_transaction(transaction_type='request')
-                        handle_command(command, channel)
+            # client.capture_message("message":"connected the bot." )
+            while True:
+                command, channel = parse_slack_output(slack_client.
+                                                      rtm_read())
+                if command and channel:
+                    # client.begin_transaction(transaction_type='request')
+                    handle_command(command, channel)
 #                        elasticapm.set_user_context(command=command, channel=channel)
+                    #client.capture_message('got command'  )
+                    #client.end_transaction('processor', 200)
+                # client.begin_transaction('processors',transaction_type='request')
+                time.sleep(READ_WEBSOCKET_DELAY)
 
-                        client.capture_message('got command'  )
-                        client.end_transaction('processor', 200)
-                   # client.begin_transaction('processors',transaction_type='request')
-                    time.sleep(READ_WEBSOCKET_DELAY)
-
-            except KeyboardInterrupt:
-                client.capture_exception()
-                pass
         else:
             LOGGER.error("Connection failed. Invalid Slack token or bot ID?")
-            client.capture_exception()
+            # client.capture_exception()
 
     finally:
         LOGGER.info('killing Logger and exiting bot , Bye Bye ..')
-        client.capture_message('Closed and cleaned up' )
+        # client.capture_message('Closed and cleaned up' )
         clean_up_exit()

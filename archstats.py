@@ -25,7 +25,7 @@ import pandas as pd
 from viaa.configuration import ConfigParser
 # from pprint import pprint
 ## use config.yml if you want to use env vars
-config = ConfigParser(config_file="config.yml")
+config = ConfigParser(config_file="config.local.yml")
 bot_id = config.app_cfg['slack_api']['bot_id']
 client_token = config.app_cfg['slack_api']['client_token']
 db_name = config.app_cfg['mh_db']['db_name']
@@ -433,7 +433,7 @@ class stats(object):
 
                 ax.legend(loc='upper left' )
                 d.plot(legend=True, kind='line',ax=ax2, subplots=False,linewidth=5.0,
-                            stacked=True, sharey=True,figsize=(width, height))
+                            stacked=False, sharey=True,figsize=(width, height))
 
 
                 fig.get_figure()
@@ -494,7 +494,7 @@ def connectDB():
 ## SUM GB / type/ workflow
 #stats().Status(countPlot=False, Plot=True)
 
-
+#stats(days=9,stype='workflowplot').Plot()
 ## AANTAL Status is 24h
 # stats().Status(countPlot=True, Plot=False)
 
