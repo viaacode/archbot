@@ -25,7 +25,7 @@ import matplotlib
 matplotlib.use('agg')
 # from pprint import pprint
 # use config.yml if you want to use env vars
-config = ConfigParser(config_file="config.yml")
+config = ConfigParser(config_file="config.local.yml")
 bot_id = config.app_cfg['slack_api']['bot_id']
 client_token = config.app_cfg['slack_api']['client_token']
 db_name = config.app_cfg['mh_db']['db_name']
@@ -497,12 +497,13 @@ def connectDB():
 # AANTAL Status is 24h
 # stats().Status(countPlot=True, Plot=False)
 
+
 # GB / type/workflow l&ast 4 days
 # stats(stype='plot',days=6).Plot()
 # ### styatus json
 #print(stats(stype='all', total=True, days=3).Fetch())
 # archbots workflowplot
-# stats(days=3,stype='cpplot').Plot()
+#stats(days=3, stype='cpplot').Plot()
 #
 # print(stats(video=True).Fetch())
 # stats().Status(countPlot=True, Plot=False)

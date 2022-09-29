@@ -1,52 +1,63 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Tue Sep 12 11:02:46 2017
+Created on Thu Sep 29 13:50:51 2022
+event:
+    {'type': 'message',
+     'user': 'U02HFGKFY',
+     'channel': 'G72H2N1CN',
+     'text': 'test',
+     'blocks': [{'type': 'rich_text',
+                 'block_id': 'nqTWP',
+                 'elements': [{'type': 'rich_text_section',
+                               'elements': [{'type': 'text',
+                                             'text': 'test'}]}]}],
+     'client_msg_id': 'ac19d122-b2cf-470f-83e6-cf1df01510d3',
+     'team': 'T02HE0C8B',
+     'source_team': 'T02HE0C8B',
+     'user_team': 'T02HE0C8B', '
+     suppress_notification': False,
+     'event_ts': '1664458122.341449',
+     'ts': '1664458122.341449'}
+usage:
+    upload  a file:
+        - upload('./plot.png')
 
 @author: tina
 """
 import logging
-import time
-from slackclient import SlackClient
-from archstats import stats
-# import configparser
-# from elasticapm import Client
-# import elasticapm
-# elasticapm.instrument()
-# elasticapm.set_transaction_name('processor')
-# elasticapm.set_transaction_result('SUCCESS')
-# from elasticapm.handlers.logging import LoggingHandler
-
+from slack_sdk.rtm_v2 import RTMClient
+from slack_sdk import WebClient
+from slack_sdk.errors import SlackApiError
 from viaa.configuration import ConfigParser
+from archstats import stats
 
-# config = ConfigParser()
 config = ConfigParser(config_file="config.yml")
+token = config.app_cfg['slack_api']['client_token']
 
-bot_id = config.app_cfg['slack_api']['bot_id']
-client_token = config.app_cfg['slack_api']['client_token']
+logger = logging.getLogger(__name__)
+LOG_FORMAT = ('%(asctime)-15s %(levelname) -5s %(name) -5s %(funcName) '
+              '-5s %(lineno) -5d: %(message)s')
+logging.basicConfig(format=LOG_FORMAT, level=logging.INFO)
 
-
-def clean_up_exit():
-    handlers = LOGGER.handlers[:]
-    for handler in handlers:
-        handler.close()
-        LOGGER.removeHandler(handler)
-# constants
+rtm = RTMClient(token=token)
 
 
-BOT_ID = bot_id
-AT_BOT = "<@" + BOT_ID + ">"
-ALL = "all"
-DAY = 'day'
-WEEK = 'week'
-MONTH = 'month'
-VIDEO = 'video'
-AUDIO = 'audio'
-OTHER = 'other'
-GB = 'count'
-# instantiate Slack & Twilio clients
-# slack_client = SlackClient(os.environ.get('SLACK_BOT_TOKEN'))
-slack_client = SlackClient(client_token)
+def upload(filepath):
+    client = WebClient(token=token)
+    logger.info(f'Uploading file: {filepath}')
+    try:
+        response = client.files_upload(
+            channels='#archbot',
+            file=filepath)
+        assert response["file"]  # the uploaded file
+    except SlackApiError as e:
+        # You will get a SlackApiError if "ok" is False
+        assert e.response["ok"] is False
+        # str like 'invalid_auth', 'channel_not_found'
+        assert e.response["error"]
+        print(f"Got an error: {e.response['error']}")
+    return True
 
 
 class plt(object):
@@ -54,9 +65,7 @@ class plt(object):
         self.ptype = ptype
         self.days = days
 
-    # @elasticapm.capture_span()
     def Post(self):
-
         if self.ptype == 'status_plot':
             stats().Status(Plot=True)
         if self.ptype == 'status_countPlot':
@@ -71,15 +80,12 @@ class plt(object):
             stype = 'cpplot'
             stats(stype=stype, days=self.days).Plot()
         try:
-            f = open('/tmp/plot.png', 'rb')
-            slack_client.api_call('files.upload', channels='G72H2N1CN',
-                                  filename='pic.png', file=f)
+            # f = open('/tmp/plot.png', 'rb')
+            upload('/tmp/plot.png')
         except Exception as e:
             return {'info': 'no file to upload',
                     'error': str(e)
                     }
-
-# @elasticapm.capture_span()
 
 
 def representsInt(s):
@@ -89,157 +95,62 @@ def representsInt(s):
     except ValueError:
         return False
 
-# @elasticapm.capture_span()
+
+def test_con():
+    client = WebClient(token=token)
+    try:
+        response = client.chat_postMessage(
+            channel='#archbot', text="Bot connected!")
+        assert response["message"]["text"] == "Bot connected!"
+        logger.info('Posted test msg, success')
+        return True
+    except SlackApiError as e:
+        # You will get a SlackApiError if "ok" is False
+        assert e.response["ok"] is False
+        # str like 'invalid_auth', 'channel_not_found'
+        assert e.response["error"]
+        logger.error(f"Got an error: {e.response['error']}")
+        return False
 
 
-def handle_command(command, channel):
-    """
-        Receives commands directed at the bot and determines if they
-        are valid commands. If so, then acts on the commands. If not,
-        returns back what it needs for clarification.
-    """
-
-    response = ''
-    plot = False
-    video = False
-    audio = False
-    other = False
-    total = False
+@rtm.on("message")
+def handle(client: RTMClient, event: dict):
     found_nr = False
-    days = 7
     workflowplot = False
     cpplot = False
-    stype = 'workflow'
-    lst = command.split()
-    for i in lst:
-        if representsInt(i):
-            found_nr = True
-            days = int(i)
-            LOGGER.info('found int setting days to: {}'.format(str(days)))
-    if command.startswith('help'):
-        response = "Usage: @archsbot " + "possible_args*['plot', 'workflowplot',"\
-            "'cpplot', 'status', 'int(nr of days)']' OR [audio,video,other,count(sum of sizes)]  followed by nr of days"
-
-    if 'plot' in lst:
-        LOGGER.info('Found plot in command')
-        plot = True
-#    if command.startswith('plot') and not command.endswith('workflow'):
-#        plot = True
-    if 'workflowplot' in lst:
-        workflowplot = True
-    if 'cpplot' in lst:
-        cpplot = True
-    if command.startswith(VIDEO):
-        video = True
-    if command.startswith(AUDIO):
-        audio = True
-    if command.startswith(OTHER):
-        other = True
-    if command.startswith(ALL):
-        total = True
-    if command.startswith(GB):
-        stype = 'all'
-    if 'status' in lst and 'plot' not in lst and 'plotcount' not in lst:
-        response = stats().Status()
-    if 'status' in lst and 'plot' in lst:
-        plt(ptype='status_plot', days=0).Post()
-    if 'status' in lst and 'plotcount' in lst:
-        plt(ptype='status_countPlot', days=0).Post()
-
-    def makeResponse():
-        if plot:
-            plt(ptype='plot', days=days).Post()
-        if workflowplot:
+    if event['text'] and event['channel'] == 'G72H2N1CN':
+        logger.debug(str(event['text']))
+        lst = event['text'].split()
+        if 'workflowplot' in lst:
+            workflowplot = True
+            logger.info('Using workflowplot')
+        if 'cpplot' in lst:
+            cpplot = True
+            logger.info('Using cpplot')
+        for i in lst:
+            if representsInt(i):
+                found_nr = True
+                days = int(i)
+                logger.info('found int setting days to: {}'.format(str(days)))
+        if workflowplot and found_nr:
+            logger.info('workflowplot')
             plt(ptype='workflow', days=days).Post()
-        if cpplot:
+        if cpplot and found_nr:
+            logger.info('workflowplot')
             plt(ptype='cpplot', days=days).Post()
-        if video or audio or other or total or stype == 'all':
-            response = stats(stype=stype, days=days, video=video, audio=audio,
-                             other=other, total=total).Fetch()
-            return slack_client.api_call("chat.postMessage", channel=channel,
-                                         text=response, as_user=True)
-    if command.endswith(DAY):
-        days = 1
-        makeResponse()
-
-    if command.endswith(WEEK):
-        days = 7
-        makeResponse()
-    if command.endswith(MONTH):
-        days = 30
-        makeResponse()
-    if command.endswith('today'):
-        days = 0
-        makeResponse()
-    if found_nr:
-        makeResponse()
-
-    slack_client.api_call("chat.postMessage", channel=channel,
-                          text=response, as_user=True)
-
-
-# @elasticapm.capture_span()
-def parse_slack_output(slack_rtm_output):
-    """
-        The Slack Real Time Messaging API is an events firehose.
-        this parsing function returns None unless a message is
-        directed at the Bot, based on its ID.
-    """
-    output_list = slack_rtm_output
-    if output_list and len(output_list) > 0:
-        for output in output_list:
-            if output and 'text' in output and AT_BOT in output['text']:
-                LOGGER.info('got input to parse: {}'.format(output_list))
-                # return text after the @ mention, whitespace removed
-                o = output['text'].split(AT_BOT)[1].strip().lower(),\
-                    output['channel']
-                # client.capture_message('processed %s' % output['text'])
-                return o
-    return None, None
+        if 'status' in lst:
+            logger.info(str(event['channel']))
+            channel_id = event['channel']
+            # thread_ts = event['ts']
+            # User ID (the format is either U*** or W***)
+            user = event['user']
+            response = stats().Status()
+            client.web_client.chat_postMessage(
+                channel=channel_id,
+                text=f"Hi <@{user}>! {response}",
+            )
 
 
 if __name__ == "__main__":
-    LOGGER = logging.getLogger(__name__)
-
-    LOG_FORMAT = ('%(asctime)-15s %(levelname) -5s %(name) -5s %(funcName) '
-                  '-3s %(lineno) -5d: %(message)s')
-    logging.basicConfig(format=LOG_FORMAT, level=logging.INFO)
-    # client = Client({'SERVICE_NAME': 'archbot',
-    #              'DEBUG': True,
-    #              'SERVICE_NAME': 'archbot',
-    #              'SECRET_TOKEN': 'aC00NFNJRUJTSVdreTlNT2hsaGs6VHp6cWhQSV9Tb21YTGVxT1MyWU1kdw==',
-    #              'SERVER_URL': 'http://do-prd-elk-01:8200'} )
-    # handler = LoggingHandler(client=client)
-    # handler.setLevel(logging.WARN)
-    # logging.getLogger('elasticapm').setLevel('INFO')
-    # LOGGER.addHandler(handler)
-
-    formatter = logging.Formatter('%(asctime)-15s  %(levelname)-6s:'
-                                  '%(message)s')
-    logging.basicConfig(format=formatter, level=logging.INFO)
-
-    try:
-        READ_WEBSOCKET_DELAY = 1  # 1 second delay reading from firehose
-        if slack_client.rtm_connect():
-            LOGGER.info("Bot connected and running!")
-            # client.capture_message("message":"connected the bot." )
-            while True:
-                command, channel = parse_slack_output(slack_client.
-                                                      rtm_read())
-                if command and channel:
-                    # client.begin_transaction(transaction_type='request')
-                    handle_command(command, channel)
-#                        elasticapm.set_user_context(command=command, channel=channel)
-                    #client.capture_message('got command'  )
-                    #client.end_transaction('processor', 200)
-                # client.begin_transaction('processors',transaction_type='request')
-                time.sleep(READ_WEBSOCKET_DELAY)
-
-        else:
-            LOGGER.error("Connection failed. Invalid Slack token or bot ID?")
-            # client.capture_exception()
-
-    finally:
-        LOGGER.info('killing Logger and exiting bot , Bye Bye ..')
-        # client.capture_message('Closed and cleaned up' )
-        clean_up_exit()
+    logger.info(test_con())
+    rtm.start()
