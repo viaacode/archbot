@@ -1,6 +1,7 @@
 # archbot
 - slackbot for viaa ingest status
 ## configure
+deprecated
 add a file config.ini like:
 ```
 [slack_api]
