@@ -2,6 +2,7 @@
 - slackbot for viaa ingest status
 ## configure
 add a file config.yaml like below fior env vars or fill in the file:
+
 ```
 viaa:
   logging:
