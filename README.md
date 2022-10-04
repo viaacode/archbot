@@ -1,16 +1,22 @@
 # archbot
 - slackbot for viaa ingest status
 ## configure
-add a file config.ini like:
-```
-[slack_api]
-bot_id = UxXxXxXxXxX
-client_token = xxx-xxxxxxxxxx-xxxxxxxxxxxxxxxxxxxxxxx
+add a file config.yaml like below fior env vars or fill in the file:
 
-[mh_db]
-db_name = data db mh
-user = someuser
-passwd = somepasswd
+```
+viaa:
+  logging:
+    level: INFO
+
+app:
+  slack_api:
+    bot_id: !ENV ${BOT_ID}
+    client_token: !ENV ${CLIENT_TOKEN}
+  mh_db:
+    db_name: !ENV ${DB_NAME}
+    user: !ENV ${DB_USER}
+    passwd: !ENV ${DB_PASSWD}
+    host: !ENV ${DB_HOST}
 
 ```
 ## Installation and run
