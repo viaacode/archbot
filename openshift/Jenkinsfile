@@ -11,6 +11,8 @@ pipeline {
             lang: ${getBaseImageName()}
             app: archbot
         spec:
+          nodeSelector:
+            ci-worker: 'true'
           containers:
           - name: default
             image: ${getImageFromDockerfile()}
