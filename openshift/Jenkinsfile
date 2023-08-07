@@ -11,8 +11,18 @@ pipeline {
             lang: ${getBaseImageName()}
             app: archbot
         spec:
-          nodeSelector:
-            infra-workers: 'true'
+          affinity:
+            nodeAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - weight: 1
+                  preference:
+                    matchExpressions:
+                      - key: ibm-cloud.kubernetes.io/worker-pool-name
+                        operator: In
+                        values:
+                          - infra-workers
+
+
           containers:
           - name: default
             image: ${getImageFromDockerfile()}
