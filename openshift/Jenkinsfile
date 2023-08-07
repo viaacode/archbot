@@ -12,7 +12,7 @@ pipeline {
             app: archbot
         spec:
           nodeSelector:
-            ci-worker: 'true'
+            infra-workers: 'true'
           containers:
           - name: default
             image: ${getImageFromDockerfile()}
