@@ -32,7 +32,7 @@ from slack_sdk.errors import SlackApiError
 from viaa.configuration import ConfigParser
 from archstats import stats
 
-config = ConfigParser(config_file="config.yml")
+config = ConfigParser(config_file="config.local.yml")
 token = config.app_cfg['slack_api']['client_token']
 
 logger = logging.getLogger(__name__)

@@ -495,9 +495,9 @@ def connectDB():
 
 #
 # SUM GB / type/ workflow
-# print(stats().Status(countPlot=False, Plot=True))
+# print(stats().Status(countPlot=False, Plot=False))
 
-# stats(days=9, stype='workflowplot').Plot()
+# stats(days=5, stype='workflowplot').Plot()
 # AANTAL Status is 24h
 # print(stats().Status(countPlot=True, Plot=False))
 
@@ -505,7 +505,7 @@ def connectDB():
 # GB / type/workflow l&ast 4 days
 # stats(stype='plot', days=6).Plot()
 # ### styatus json
-# print(stats(stype='all', total=True, days=3).Fetch())
+# print(stats(stype='all', total=True, days=5).Fetch())
 # archbots workflowplot
 # stats(days=3, stype='cpplot').Plot()
 #
