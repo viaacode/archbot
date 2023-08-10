@@ -200,25 +200,25 @@ class stats(object):
             tw = pd.concat([wdata, w2data], axis=1)
             t = pd.concat([g2data, gdata], axis=1)
             t['GB'] = t['GB'].astype(float)
-            p = t.drop('aantal', 1)
-            p2 = t.drop('GB', 1)
+            # p = t.drop('aantal', 1)
+            # p2 = t.drop('GB', 1)
             width = 24
 
             if Plot is True:
-                n = len(p.columns)
+                n = len(t.columns)  # p
                 height = int(n) * 6
-                ax = p.unstack(level=0).plot(kind='barh', stacked=True,
+                ax = t.unstack(level=0).plot(kind='barh', stacked=True,  # p
                                              subplots=True, sharey=True,
                                              sharex=True,
                                              figsize=(width, height))
                 plot.savefig('/tmp/plot.png')
                 LOGGER.info('saved image')
             if countPlot is True:
-                n = len(p2.columns)
+                n = len(t.columns)  # p2
                 height = int(n) * 6
-                ax = p2.unstack(level=0).plot(kind='barh', stacked=True,
-                                              subplots=False, sharey=False,
-                                              figsize=(width, height))
+                ax = t.unstack(level=0).plot(kind='barh', stacked=True,  # p2
+                                             subplots=False, sharey=False,
+                                             figsize=(width, height))
                 fig = ax.get_figure()
                 fig.savefig('/tmp/plot.png')
                 LOGGER.info('saved image')
